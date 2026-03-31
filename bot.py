@@ -4,7 +4,7 @@ from telegram import Update, ReplyKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # 🔑 токен из Railway Variables
-TOKEN = os.getenv("8615966494:AAEo6b5axjcrlQrHz1K-YCRp0sE_-fSyMBk")
+TOKEN = "8615966494:AAEo6b5axjcrlQrHz1K-YCRp0sE_-fSyMBk"
 
 questions = [
     {
@@ -109,7 +109,7 @@ async def send_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Файл пока не создан")
 
 # 🚀 запуск
-app = ApplicationBuilder().token(TOKEN).build()
+app = ApplicationBuilder().TOKEN(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("results", send_results))
