@@ -6,6 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 # 🔑 токен из Railway Variables
 TOKEN = "8615966494:AAEo6b5axjcrlQrHz1K-YCRp0sE_-fSyMBk"
 
+
 questions = [
     {
         "question": "Что выведет print(2 + 2)?",
@@ -109,7 +110,7 @@ async def send_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Файл пока не создан")
 
 # 🚀 запуск
-app = ApplicationBuilder().TOKEN(TOKEN).build()
+app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("results", send_results))
