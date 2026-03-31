@@ -1,7 +1,9 @@
+import os
+import csv
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "8615966494:AAEo6b5axjcrlQrHz1K-YCRp0sE_-fSyMBk"
+TOKEN = os.getenv("TOKEN")
 
 questions = [
     {
@@ -23,11 +25,41 @@ questions = [
 
 user_data = {}
 
+# 📌 Старт
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
-    user_data[user_id] = {"score": 0, "q": 0}
+    user_data[user_id] = {"score": 0, "q": 0, "answers": [], "name": None}
+    await update.message.reply_text("Введите ваше ФИО:")
+
+# 📌 Обработка сообщений
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.chat_id
+    text = update.message.text
+
+    # если нет имени
+    if user_data[user_id]["name"] is None:
+        user_data[user_id]["name"] = text
+        await send_question(update, context)
+        return
+
+    q_index = user_data[user_id]["q"]
+    correct = questions[q_index]["answer"]
+
+    is_correct = text == correct
+    if is_correct:
+        user_data[user_id]["score"] += 1
+
+    user_data[user_id]["answers"].append({
+        "question": questions[q_index]["question"],
+        "user_answer": text,
+        "correct_answer": correct,
+        "is_correct": is_correct
+    })
+
+    user_data[user_id]["q"] += 1
     await send_question(update, context)
 
+# 📌 Отправка вопроса
 async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     q_index = user_data[user_id]["q"]
@@ -35,29 +67,37 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if q_index < len(questions):
         q = questions[q_index]
         keyboard = [[opt] for opt in q["options"]]
-        reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
         await update.message.reply_text(q["question"], reply_markup=reply_markup)
     else:
-        score = user_data[user_id]["score"]
-        await update.message.reply_text(f"Тест завершён! Твой результат: {score}/{len(questions)}")
+        await finish_test(update, context)
 
-async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 📌 Завершение теста
+async def finish_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
-    user_answer = update.message.text
+    data = user_data[user_id]
 
-    q_index = user_data[user_id]["q"]
-    correct_answer = questions[q_index]["answer"]
+    # запись в CSV
+    with open("results.csv", "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
 
-    if user_answer == correct_answer:
-        user_data[user_id]["score"] += 1
+        for ans in data["answers"]:
+            writer.writerow([
+                data["name"],
+                ans["question"],
+                ans["user_answer"],
+                ans["correct_answer"],
+                ans["is_correct"]
+            ])
 
-    user_data[user_id]["q"] += 1
-    await send_question(update, context)
+    await update.message.reply_text(
+        f"Тест завершён!\nБаллы: {data['score']}/{len(questions)}"
+    )
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_answer))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 app.run_polling()
