@@ -4,27 +4,73 @@ from telegram import Update, ReplyKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # 🔑 токен из Railway Variables
-TOKEN = "8615966494:AAEo6b5axjcrlQrHz1K-YCRp0sE_-fSyMBk"
+TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
 
 
 questions = [
     {
-        "question": "Что выведет print(2 + 2)?",
-        "options": ["3", "4", "5"],
-        "answer": "4"
+        "question": "1. Что используется для вывода текста в Python?",
+        "answers": ["print()", "echo()", "write()"],
+        "correct": "print()"
     },
     {
-        "question": "Как объявить переменную?",
-        "options": ["int x = 5", "x = 5", "var x = 5"],
-        "answer": "x = 5"
+        "question": "2. Какой язык используется для создания сайтов?",
+        "answers": ["HTML", "Windows", "Photoshop"],
+        "correct": "HTML"
     },
     {
-        "question": "Какой тип данных у 'Hello'?",
-        "options": ["int", "str", "bool"],
-        "answer": "str"
+        "question": "3. Какой символ используется для комментариев в Python?",
+        "answers": ["#", "//", "/*"],
+        "correct": "#"
+    },
+    {
+        "question": "4. Что означает CPU?",
+        "answers": [
+            "Центральный процессор",
+            "Видеокарта",
+            "Оперативная память"
+        ],
+        "correct": "Центральный процессор"
+    },
+    {
+        "question": "5. Как называется цикл в Python?",
+        "answers": ["for", "repeat", "cycle"],
+        "correct": "for"
+    },
+    {
+        "question": "6. Какой язык программирования самый популярный для ботов Telegram?",
+        "answers": ["Python", "Paint", "Excel"],
+        "correct": "Python"
+    },
+    {
+        "question": "7. Как называется ошибка в программе?",
+        "answers": ["Баг", "Фикс", "Скрипт"],
+        "correct": "Баг"
+    },
+    {
+        "question": "8. Как называется хранение данных в переменной?",
+        "answers": ["value", "переменная", "папка"],
+        "correct": "переменная"
+    },
+    {
+        "question": "9. Что делает input() в Python?",
+        "answers": [
+            "Получает ввод от пользователя",
+            "Удаляет код",
+            "Закрывает программу"
+        ],
+        "correct": "Получает ввод от пользователя"
+    },
+    {
+        "question": "10. Что такое IDE?",
+        "answers": [
+            "Среда разработки",
+            "Игра",
+            "Антивирус"
+        ],
+        "correct": "Среда разработки"
     }
 ]
-
 user_data = {}
 
 # ▶️ старт
