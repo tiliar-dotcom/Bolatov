@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 TOKEN = os.getenv("8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk")
 
 # 🔒 твой Telegram ID (вставь свой!)
-ADMIN_ID = kyops1254
+ADMIN_ID = 8348404226
 
 questions = [
     {"question": "1. Что используется для вывода текста в Python?", "options": ["print()", "echo()", "write()"], "answer": "print()"},
