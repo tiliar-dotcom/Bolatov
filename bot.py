@@ -4,7 +4,7 @@ from telegram import Update, ReplyKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # 🔑 токен (Railway)
-TOKEN = os.getenv("8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk")
+TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
 
 # 🔒 твой Telegram ID (вставь свой!)
 ADMIN_ID = 8348404226
