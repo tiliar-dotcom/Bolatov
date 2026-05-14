@@ -1,87 +1,51 @@
 import os
-import csv
+from openpyxl import Workbook, load_workbook
 from telegram import Update, ReplyKeyboardMarkup, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# 🔑 токен из Railway Variables
-TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
+# 🔑 токен (Railway)
+TOKEN = os.getenv("8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk")
 
+# 🔒 твой Telegram ID (вставь свой!)
+ADMIN_ID = @kyops1254
 
 questions = [
-    {
-        "question": "1. Что используется для вывода текста в Python?",
-        "answers": ["print()", "echo()", "write()"],
-        "correct": "print()"
-    },
-    {
-        "question": "2. Какой язык используется для создания сайтов?",
-        "answers": ["HTML", "Windows", "Photoshop"],
-        "correct": "HTML"
-    },
-    {
-        "question": "3. Какой символ используется для комментариев в Python?",
-        "answers": ["#", "//", "/*"],
-        "correct": "#"
-    },
-    {
-        "question": "4. Что означает CPU?",
-        "answers": [
-            "Центральный процессор",
-            "Видеокарта",
-            "Оперативная память"
-        ],
-        "correct": "Центральный процессор"
-    },
-    {
-        "question": "5. Как называется цикл в Python?",
-        "answers": ["for", "repeat", "cycle"],
-        "correct": "for"
-    },
-    {
-        "question": "6. Какой язык программирования самый популярный для ботов Telegram?",
-        "answers": ["Python", "Paint", "Excel"],
-        "correct": "Python"
-    },
-    {
-        "question": "7. Как называется ошибка в программе?",
-        "answers": ["Баг", "Фикс", "Скрипт"],
-        "correct": "Баг"
-    },
-    {
-        "question": "8. Как называется хранение данных в переменной?",
-        "answers": ["value", "переменная", "папка"],
-        "correct": "переменная"
-    },
-    {
-        "question": "9. Что делает input() в Python?",
-        "answers": [
-            "Получает ввод от пользователя",
-            "Удаляет код",
-            "Закрывает программу"
-        ],
-        "correct": "Получает ввод от пользователя"
-    },
-    {
-        "question": "10. Что такое IDE?",
-        "answers": [
-            "Среда разработки",
-            "Игра",
-            "Антивирус"
-        ],
-        "correct": "Среда разработки"
-    }
+    {"question": "1. Что используется для вывода текста в Python?", "options": ["print()", "echo()", "write()"], "answer": "print()"},
+    {"question": "2. Какой язык используется для создания сайтов?", "options": ["HTML", "Windows", "Photoshop"], "answer": "HTML"},
+    {"question": "3. Какой символ используется для комментариев в Python?", "options": ["#", "//", "/*"], "answer": "#"},
+    {"question": "4. Что означает CPU?", "options": ["Центральный процессор", "Видеокарта", "Оперативная память"], "answer": "Центральный процессор"},
+    {"question": "5. Как называется цикл в Python?", "options": ["for", "repeat", "cycle"], "answer": "for"},
+    {"question": "6. Какой язык программирования самый популярный для ботов Telegram?", "options": ["Python", "Paint", "Excel"], "answer": "Python"},
+    {"question": "7. Как называется ошибка в программе?", "options": ["Баг", "Фикс", "Скрипт"], "answer": "Баг"},
+    {"question": "8. Как называется хранение данных в переменной?", "options": ["value", "переменная", "папка"], "answer": "переменная"},
+    {"question": "9. Что делает input() в Python?", "options": ["Получает ввод от пользователя", "Удаляет код", "Закрывает программу"], "answer": "Получает ввод от пользователя"},
+    {"question": "10. Что такое IDE?", "options": ["Среда разработки", "Игра", "Антивирус"], "answer": "Среда разработки"}
 ]
+
 user_data = {}
+
+# 📊 сохранение в Excel
+def save_to_excel(data):
+    file_name = "results.xlsx"
+
+    if not os.path.exists(file_name):
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["ФИО", "Вопрос", "Ответ", "Правильный", "Верно"])
+        wb.save(file_name)
+
+    wb = load_workbook(file_name)
+    ws = wb.active
+
+    for row in data:
+        ws.append(row)
+
+    wb.save(file_name)
 
 # ▶️ старт
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
-    user_data[user_id] = {
-        "name": None,
-        "score": 0,
-        "q": 0,
-        "answers": []
-    }
+    user_data[user_id] = {"name": None, "score": 0, "q": 0, "answers": []}
     await update.message.reply_text("Введите ваше ФИО:")
 
 # 📩 обработка сообщений
@@ -138,19 +102,20 @@ async def finish_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     data = user_data[user_id]
 
-    # запись в CSV
-    with open("results.csv", "a", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerows(data["answers"])
+    save_to_excel(data["answers"])
 
     await update.message.reply_text(
         f"Тест завершён!\nРезультат: {data['score']}/{len(questions)}"
     )
 
-# 📄 отправка файла
+# 📄 отправка Excel (только тебе)
 async def send_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.chat_id != ADMIN_ID:
+        await update.message.reply_text("У вас нет доступа ❌")
+        return
+
     try:
-        with open("results.csv", "rb") as file:
+        with open("results.xlsx", "rb") as file:
             await update.message.reply_document(document=InputFile(file))
     except:
         await update.message.reply_text("Файл пока не создан")
