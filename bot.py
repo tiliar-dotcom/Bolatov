@@ -25,21 +25,31 @@ questions = [
 user_data = {}
 
 # 📊 сохранение в Excel
-def save_to_excel(data):
+def save_to_excel(data, score):
     file_name = "results.xlsx"
 
     if not os.path.exists(file_name):
         wb = Workbook()
         ws = wb.active
-        ws.append(["ФИО", "Вопрос", "Ответ", "Правильный", "Верно"])
+
+        # заголовки
+        headers = ["ФИО"] + [f"В{i+1}" for i in range(len(questions))] + ["Балл"]
+        ws.append(headers)
+
         wb.save(file_name)
 
     wb = load_workbook(file_name)
     ws = wb.active
 
-    for row in data:
-        ws.append(row)
+    # формируем строку
+    row = [data[0][0]]  # ФИО
 
+    for ans in data:
+        row.append("✔" if ans[4] else "❌")
+
+    row.append(score)
+
+    ws.append(row)
     wb.save(file_name)
 
 # ▶️ старт
@@ -102,7 +112,7 @@ async def finish_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     data = user_data[user_id]
 
-    save_to_excel(data["answers"])
+    save_to_excel(data["answers"], data["score"])
 
     await update.message.reply_text(
         f"Тест завершён!\nРезультат: {data['score']}/{len(questions)}"
