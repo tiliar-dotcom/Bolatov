@@ -1,39 +1,113 @@
 import os
+import random
+from datetime import datetime
+
 from openpyxl import Workbook, load_workbook
-from telegram import Update, ReplyKeyboardMarkup, InputFile
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# 🔑 токен (Railway)
-TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    InputFile
+)
 
-# 🔒 твой Telegram ID (вставь свой!)
-ADMIN_ID = 8348404226
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    ContextTypes,
+)
 
-questions = [
-    {"question": "1. Что используется для вывода текста в Python?", "options": ["print()", "echo()", "write()"], "answer": "print()"},
-    {"question": "2. Какой язык используется для создания сайтов?", "options": ["HTML", "Windows", "Photoshop"], "answer": "HTML"},
-    {"question": "3. Какой символ используется для комментариев в Python?", "options": ["#", "//", "/*"], "answer": "#"},
-    {"question": "4. Что означает CPU?", "options": ["Центральный процессор", "Видеокарта", "Оперативная память"], "answer": "Центральный процессор"},
-    {"question": "5. Как называется цикл в Python?", "options": ["for", "repeat", "cycle"], "answer": "for"},
-    {"question": "6. Какой язык программирования самый популярный для ботов Telegram?", "options": ["Python", "Paint", "Excel"], "answer": "Python"},
-    {"question": "7. Как называется ошибка в программе?", "options": ["Баг", "Фикс", "Скрипт"], "answer": "Баг"},
-    {"question": "8. Как называется хранение данных в переменной?", "options": ["value", "переменная", "папка"], "answer": "переменная"},
-    {"question": "9. Что делает input() в Python?", "options": ["Получает ввод от пользователя", "Удаляет код", "Закрывает программу"], "answer": "Получает ввод от пользователя"},
-    {"question": "10. Что такое IDE?", "options": ["Среда разработки", "Игра", "Антивирус"], "answer": "Среда разработки"}
-]
+# =====================================================
+# НАСТРОЙКИ
+# =====================================================
+
+TOKEN = os.getenv("TOKEN")
+
+ADMIN_ID = 123456789
+
+# =====================================================
+# ПРЕДМЕТЫ И КЛАССЫ
+# =====================================================
+
+subjects = {
+    "Математика": ["5", "6"],
+    "Естествознание": ["5", "6"],
+
+    "Алгебра": ["7", "8", "9", "10", "11"],
+    "Геометрия": ["7", "8", "9", "10", "11"],
+    "Физика": ["7", "8", "9", "10", "11"],
+    "Химия": ["7", "8", "9", "10", "11"],
+    "Биология": ["7", "8", "9", "10", "11"],
+
+    "Информатика": ["5", "6", "7", "8", "9", "10", "11"],
+    "География": ["5", "6", "7", "8", "9", "10", "11"],
+    "Русский язык": ["5", "6", "7", "8", "9", "10", "11"],
+    "Русская литература": ["5", "6", "7", "8", "9", "10", "11"],
+    "Казахский язык": ["5", "6", "7", "8", "9", "10", "11"],
+    "Казахская литература": ["5", "6", "7", "8", "9", "10", "11"],
+    "История Казахстана": ["5", "6", "7", "8", "9", "10", "11"],
+    "Всемирная история": ["5", "6", "7", "8", "9", "10", "11"],
+}
+
+# =====================================================
+# ГЕНЕРАЦИЯ ВОПРОСОВ
+# =====================================================
+
+question_bank = {}
+
+def generate_questions(subject, grade):
+    questions = []
+
+    for i in range(1, 51):
+        questions.append({
+            "question": f"[{subject} {grade} класс] Вопрос №{i}",
+            "options": [
+                f"Ответ A{i}",
+                f"Ответ B{i}",
+                f"Ответ C{i}"
+            ],
+            "answer": f"Ответ A{i}"
+        })
+
+    return questions
+
+for subject, grades in subjects.items():
+
+    question_bank[subject] = {}
+
+    for grade in grades:
+        question_bank[subject][grade] = generate_questions(
+            subject,
+            grade
+        )
+
+# =====================================================
+# ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ
+# =====================================================
 
 user_data = {}
 
-# 📊 сохранение в Excel
-def save_to_excel(data, score):
+# =====================================================
+# EXCEL
+# =====================================================
+
+def save_to_excel(data, score, subject, grade):
+
     file_name = "results.xlsx"
 
     if not os.path.exists(file_name):
+
         wb = Workbook()
         ws = wb.active
 
-        # заголовки
-        headers = ["ФИО"] + [f"В{i+1}" for i in range(len(questions))] + ["Балл"]
+        headers = [
+            "ФИО",
+            "Предмет",
+            "Класс",
+            "Дата и время"
+        ] + [f"В{i}" for i in range(1, 16)] + ["Балл"]
+
         ws.append(headers)
 
         wb.save(file_name)
@@ -41,25 +115,100 @@ def save_to_excel(data, score):
     wb = load_workbook(file_name)
     ws = wb.active
 
-    # формируем строку
-    row = [data[0][0]]  # ФИО
+    current_time = datetime.now().strftime(
+        "%d.%m.%Y %H:%M"
+    )
+
+    row = [
+        data[0][0],
+        subject,
+        grade,
+        current_time
+    ]
 
     for ans in data:
-        row.append("✔" if ans[4] else "❌")
+        row.append(
+            "✔" if ans[4] else "❌"
+        )
 
     row.append(score)
 
     ws.append(row)
+
     wb.save(file_name)
 
-# ▶️ старт
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.chat_id
-    user_data[user_id] = {"name": None, "score": 0, "q": 0, "answers": []}
-    await update.message.reply_text("Введите ваше ФИО:")
+# =====================================================
+# START
+# =====================================================
 
-# 📩 обработка сообщений
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update,
+                context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.message.chat_id
+
+    user_data[user_id] = {
+
+        "name": None,
+
+        "subject": None,
+        "grade": None,
+
+        "score": 0,
+        "q": 0,
+
+        "answers": [],
+        "questions": [],
+
+        "results_mode": False,
+        "results_subject": None
+    }
+
+    keyboard = [[s] for s in subjects.keys()]
+
+    await update.message.reply_text(
+        "Добро пожаловать в систему тестирования!\n\nВыберите предмет:",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard,
+            resize_keyboard=True
+        )
+    )
+
+# =====================================================
+# RESULTS
+# =====================================================
+
+async def send_results(update: Update,
+                       context: ContextTypes.DEFAULT_TYPE):
+
+    if update.message.chat_id != ADMIN_ID:
+
+        await update.message.reply_text(
+            "Нет доступа"
+        )
+
+        return
+
+    user_id = update.message.chat_id
+
+    user_data[user_id]["results_mode"] = True
+
+    keyboard = [[s] for s in subjects.keys()]
+
+    await update.message.reply_text(
+        "Выберите предмет:",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard,
+            resize_keyboard=True
+        )
+    )
+
+# =====================================================
+# HANDLE MESSAGE
+# =====================================================
+
+async def handle_message(update: Update,
+                         context: ContextTypes.DEFAULT_TYPE):
+
     user_id = update.message.chat_id
     text = update.message.text
 
@@ -67,74 +216,272 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
         return
 
-    # ввод ФИО
-    if user_data[user_id]["name"] is None:
-        user_data[user_id]["name"] = text
+    data = user_data[user_id]
+
+    # =================================================
+    # РЕЖИМ RESULTS
+    # =================================================
+
+    if data.get("results_mode"):
+
+        if data["results_subject"] is None:
+
+            if text in subjects:
+
+                data["results_subject"] = text
+
+                keyboard = [
+                    [g]
+                    for g in subjects[text]
+                ]
+
+                await update.message.reply_text(
+                    "Выберите класс:",
+                    reply_markup=ReplyKeyboardMarkup(
+                        keyboard,
+                        resize_keyboard=True
+                    )
+                )
+
+                return
+
+        else:
+
+            selected_subject = data["results_subject"]
+            selected_grade = text
+
+            source_file = "results.xlsx"
+
+            if not os.path.exists(source_file):
+
+                await update.message.reply_text(
+                    "Файл результатов не найден"
+                )
+
+                return
+
+            wb = load_workbook(source_file)
+            ws = wb.active
+
+            new_wb = Workbook()
+            new_ws = new_wb.active
+
+            headers = [
+                cell.value
+                for cell in ws[1]
+            ]
+
+            new_ws.append(headers)
+
+            for row in ws.iter_rows(
+                min_row=2,
+                values_only=True
+            ):
+
+                subject = str(row[1])
+                grade = str(row[2])
+
+                if (
+                    subject == selected_subject
+                    and grade == selected_grade
+                ):
+
+                    new_ws.append(row)
+
+            filtered_file = (
+                f"{selected_subject}_{selected_grade}.xlsx"
+            )
+
+            new_wb.save(filtered_file)
+
+            with open(filtered_file, "rb") as file:
+
+                await update.message.reply_document(
+                    document=InputFile(file)
+                )
+
+            data["results_mode"] = False
+            data["results_subject"] = None
+
+            return
+
+    # =================================================
+    # ВЫБОР ПРЕДМЕТА
+    # =================================================
+
+    if data["subject"] is None:
+
+        if text in subjects:
+
+            data["subject"] = text
+
+            grades = subjects[text]
+
+            keyboard = [[g] for g in grades]
+
+            await update.message.reply_text(
+                "Выберите класс:",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard,
+                    resize_keyboard=True
+                )
+            )
+
+            return
+
+    # =================================================
+    # ВЫБОР КЛАССА
+    # =================================================
+
+    if data["grade"] is None:
+
+        if text in subjects[data["subject"]]:
+
+            data["grade"] = text
+
+            await update.message.reply_text(
+                "Введите ваше ФИО:"
+            )
+
+            return
+
+    # =================================================
+    # ВВОД ФИО
+    # =================================================
+
+    if data["name"] is None:
+
+        data["name"] = text
+
+        all_questions = question_bank[
+            data["subject"]
+        ][
+            data["grade"]
+        ]
+
+        data["questions"] = random.sample(
+            all_questions,
+            15
+        )
+
         await send_question(update, context)
+
         return
 
-    q_index = user_data[user_id]["q"]
+    # =================================================
+    # ОТВЕТЫ
+    # =================================================
 
-    if q_index < len(questions):
-        correct = questions[q_index]["answer"]
+    q_index = data["q"]
+
+    if q_index < len(data["questions"]):
+
+        q = data["questions"][q_index]
+
+        correct = q["answer"]
+
         is_correct = text == correct
 
         if is_correct:
-            user_data[user_id]["score"] += 1
+            data["score"] += 1
 
-        user_data[user_id]["answers"].append([
-            user_data[user_id]["name"],
-            questions[q_index]["question"],
+        data["answers"].append([
+            data["name"],
+            q["question"],
             text,
             correct,
             is_correct
         ])
 
-        user_data[user_id]["q"] += 1
+        data["q"] += 1
+
         await send_question(update, context)
 
-# ❓ отправка вопроса
-async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# =====================================================
+# ОТПРАВКА ВОПРОСОВ
+# =====================================================
+
+async def send_question(update: Update,
+                        context: ContextTypes.DEFAULT_TYPE):
+
     user_id = update.message.chat_id
-    q_index = user_data[user_id]["q"]
 
-    if q_index < len(questions):
-        q = questions[q_index]
-        keyboard = [[opt] for opt in q["options"]]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-        await update.message.reply_text(q["question"], reply_markup=reply_markup)
-    else:
-        await finish_test(update, context)
-
-# ✅ завершение теста
-async def finish_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.chat_id
     data = user_data[user_id]
 
-    save_to_excel(data["answers"], data["score"])
+    q_index = data["q"]
 
-    await update.message.reply_text(
-        f"Тест завершён!\nРезультат: {data['score']}/{len(questions)}"
+    if q_index < len(data["questions"]):
+
+        q = data["questions"][q_index]
+
+        keyboard = [
+            [opt]
+            for opt in q["options"]
+        ]
+
+        await update.message.reply_text(
+            q["question"],
+            reply_markup=ReplyKeyboardMarkup(
+                keyboard,
+                resize_keyboard=True
+            )
+        )
+
+    else:
+
+        await finish_test(update, context)
+
+# =====================================================
+# ЗАВЕРШЕНИЕ
+# =====================================================
+
+async def finish_test(update: Update,
+                      context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.message.chat_id
+
+    data = user_data[user_id]
+
+    save_to_excel(
+        data["answers"],
+        data["score"],
+        data["subject"],
+        data["grade"]
     )
 
-# 📄 отправка Excel (только тебе)
-async def send_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.chat_id != ADMIN_ID:
-        await update.message.reply_text("У вас нет доступа ❌")
-        return
+    percent = round(
+        data["score"] / 15 * 100
+    )
 
-    try:
-        with open("results.xlsx", "rb") as file:
-            await update.message.reply_document(document=InputFile(file))
-    except:
-        await update.message.reply_text("Файл пока не создан")
+    await update.message.reply_text(
+        f"Тест завершён!\n\n"
+        f"Предмет: {data['subject']}\n"
+        f"Класс: {data['grade']}\n"
+        f"Балл: {data['score']}/15\n"
+        f"Процент: {percent}%"
+    )
 
-# 🚀 запуск
+# =====================================================
+# RUN
+# =====================================================
+
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("results", send_results))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+app.add_handler(
+    CommandHandler("start", start)
+)
+
+app.add_handler(
+    CommandHandler("results", send_results)
+)
+
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        handle_message
+    )
+)
+
+print("Бот запущен")
 
 app.run_polling()
