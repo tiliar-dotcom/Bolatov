@@ -22,7 +22,7 @@ from telegram.ext import (
 # НАСТРОЙКИ
 # =====================================================
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk")
 
 ADMIN_ID = 123456789
 
