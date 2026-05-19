@@ -1,4 +1,5 @@
 import os
+import json
 import random
 from datetime import datetime
 
@@ -51,36 +52,26 @@ subjects = {
 }
 
 # =====================================================
-# ГЕНЕРАЦИЯ ВОПРОСОВ
+# НАЗВАНИЯ JSON ФАЙЛОВ
 # =====================================================
 
-question_bank = {}
-
-def generate_questions(subject, grade):
-    questions = []
-
-    for i in range(1, 51):
-        questions.append({
-            "question": f"[{subject} {grade} класс] Вопрос №{i}",
-            "options": [
-                f"Ответ A{i}",
-                f"Ответ B{i}",
-                f"Ответ C{i}"
-            ],
-            "answer": f"Ответ A{i}"
-        })
-
-    return questions
-
-for subject, grades in subjects.items():
-
-    question_bank[subject] = {}
-
-    for grade in grades:
-        question_bank[subject][grade] = generate_questions(
-            subject,
-            grade
-        )
+subject_files = {
+    "Информатика": "informatics",
+    "География": "geography",
+    "Русский язык": "russian_language",
+    "Русская литература": "russian_literature",
+    "Казахский язык": "kazakh_language",
+    "Казахская литература": "kazakh_literature",
+    "История Казахстана": "history_kz",
+    "Всемирная история": "world_history",
+    "Математика": "math",
+    "Алгебра": "algebra",
+    "Геометрия": "geometry",
+    "Физика": "physics",
+    "Химия": "chemistry",
+    "Биология": "biology",
+    "Естествознание": "science"
+}
 
 # =====================================================
 # ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ
@@ -89,7 +80,25 @@ for subject, grades in subjects.items():
 user_data = {}
 
 # =====================================================
-# EXCEL
+# ЗАГРУЗКА ВОПРОСОВ ИЗ JSON
+# =====================================================
+
+def load_questions(subject, grade):
+
+    file_subject = subject_files[subject]
+
+    file_path = (
+        f"questions/{file_subject}_{grade}.json"
+    )
+
+    if not os.path.exists(file_path):
+        return []
+
+    with open(file_path, encoding="utf-8") as file:
+        return json.load(file)
+
+# =====================================================
+# СОХРАНЕНИЕ В EXCEL
 # =====================================================
 
 def save_to_excel(data, score, subject, grade):
@@ -219,7 +228,7 @@ async def handle_message(update: Update,
     data = user_data[user_id]
 
     # =================================================
-    # РЕЖИМ RESULTS
+    # RESULTS MODE
     # =================================================
 
     if data.get("results_mode"):
@@ -247,7 +256,10 @@ async def handle_message(update: Update,
 
         else:
 
-            selected_subject = data["results_subject"]
+            selected_subject = data[
+                "results_subject"
+            ]
+
             selected_grade = text
 
             source_file = "results.xlsx"
@@ -353,11 +365,18 @@ async def handle_message(update: Update,
 
         data["name"] = text
 
-        all_questions = question_bank[
-            data["subject"]
-        ][
+        all_questions = load_questions(
+            data["subject"],
             data["grade"]
-        ]
+        )
+
+        if len(all_questions) < 15:
+
+            await update.message.reply_text(
+                "Недостаточно вопросов в JSON файле"
+            )
+
+            return
 
         data["questions"] = random.sample(
             all_questions,
@@ -432,7 +451,7 @@ async def send_question(update: Update,
         await finish_test(update, context)
 
 # =====================================================
-# ЗАВЕРШЕНИЕ
+# ЗАВЕРШЕНИЕ ТЕСТА
 # =====================================================
 
 async def finish_test(update: Update,
@@ -462,7 +481,7 @@ async def finish_test(update: Update,
     )
 
 # =====================================================
-# RUN
+# ЗАПУСК
 # =====================================================
 
 app = ApplicationBuilder().token(TOKEN).build()
