@@ -1,8 +1,3 @@
-
-TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
-
-ADMIN_ID = 8348404226
-
 import os
 import random
 from datetime import datetime
