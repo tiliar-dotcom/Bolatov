@@ -1,490 +1,116 @@
 import os
 import random
-from datetime import datetime
-from openpyxl import Workbook, load_workbook
-from telegram import Update, ReplyKeyboardMarkup, InputFile
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = "8429654652:AAHEDXDt8nT_mczfubd4rxf-OkUTFoP0wFk"
+# ===== CONFIG =====
+TOKEN = os.getenv("TOKEN")  
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-ADMIN_ID = 8348404226
-
+# ===== SUBJECTS =====
 subjects = {
     "Информатика": ["5", "6", "7", "8", "9", "10", "11"],
     "Математика": ["5", "6"]
 }
 
+# ===== QUESTION BANK =====
 question_bank = {
-
-"Информатика": {
-
-"5": [
-
-{"question":"Что такое компьютер?","options":["Электронное устройство","Игрушка","Телефон","Телевизор"],"answer":"Электронное устройство"},
-{"question":"Как называется устройство ввода текста?","options":["Клавиатура","Монитор","Колонки","Принтер"],"answer":"Клавиатура"},
-{"question":"Что показывает изображение на экране?","options":["Монитор","Мышь","Принтер","Сканер"],"answer":"Монитор"},
-{"question":"Как называется устройство для печати?","options":["Принтер","Сканер","Микрофон","Камера"],"answer":"Принтер"},
-{"question":"Что используется для управления курсором?","options":["Мышь","Монитор","Принтер","Проектор"],"answer":"Мышь"},
-{"question":"Как называется мозг компьютера?","options":["Процессор","Монитор","Клавиатура","Колонки"],"answer":"Процессор"},
-{"question":"Что такое интернет?","options":["Глобальная сеть","Игра","Файл","Папка"],"answer":"Глобальная сеть"},
-{"question":"Как называется программа для просмотра сайтов?","options":["Браузер","Word","Paint","Excel"],"answer":"Браузер"},
-{"question":"Что делает кнопка Enter?","options":["Переход на новую строку","Удаляет текст","Выключает компьютер","Копирует файл"],"answer":"Переход на новую строку"},
-{"question":"Как называется переносной компьютер?","options":["Ноутбук","Монитор","Сканер","Принтер"],"answer":"Ноутбук"},
-{"question":"Что хранит информацию на компьютере?","options":["Жесткий диск","Монитор","Клавиатура","Мышь"],"answer":"Жесткий диск"},
-{"question":"Как называется программа для работы с текстом?","options":["Word","Paint","Chrome","Excel"],"answer":"Word"},
-{"question":"Что такое сайт?","options":["Страница в интернете","Файл","Игра","Папка"],"answer":"Страница в интернете"},
-{"question":"Как называется устройство для копирования изображений?","options":["Сканер","Монитор","Мышь","Клавиатура"],"answer":"Сканер"},
-{"question":"Что такое пароль?","options":["Защита аккаунта","Игра","Программа","Кнопка"],"answer":"Защита аккаунта"},
-{"question":"Что нельзя сообщать в интернете?","options":["Пароль","Имя","Возраст","Любимый цвет"],"answer":"Пароль"},
-{"question":"Что такое рабочий стол компьютера?","options":["Главный экран","Папка","Файл","Клавиатура"],"answer":"Главный экран"},
-{"question":"Как называется указатель мыши на экране?","options":["Курсор","Файл","Папка","Документ"],"answer":"Курсор"},
-{"question":"Что делает клавиша Delete?","options":["Удаляет объект","Создает папку","Печатает текст","Копирует файл"],"answer":"Удаляет объект"},
-{"question":"Что такое флешка?","options":["Носитель информации","Монитор","Клавиатура","Колонки"],"answer":"Носитель информации"}
-
-],
-
-"6": [
-
-{"question":"Что такое файл?","options":["Хранилище данных","Монитор","Принтер","Игра"],"answer":"Хранилище данных"},
-{"question":"Что такое папка?","options":["Место хранения файлов","Программа","Монитор","Браузер"],"answer":"Место хранения файлов"},
-{"question":"Что такое Windows?","options":["Операционная система","Игра","Браузер","Документ"],"answer":"Операционная система"},
-{"question":"Что делает Ctrl+C?","options":["Копирует","Удаляет","Вставляет","Закрывает"],"answer":"Копирует"},
-{"question":"Что делает Ctrl+V?","options":["Вставляет","Удаляет","Копирует","Сохраняет"],"answer":"Вставляет"},
-{"question":"Что такое Paint?","options":["Графический редактор","Браузер","Антивирус","Игра"],"answer":"Графический редактор"},
-{"question":"Что такое Excel?","options":["Табличный редактор","Текстовый редактор","Браузер","Игра"],"answer":"Табличный редактор"},
-{"question":"Что такое Word?","options":["Текстовый редактор","Браузер","Антивирус","Плеер"],"answer":"Текстовый редактор"},
-{"question":"Что делает Backspace?","options":["Удаляет символ слева","Закрывает окно","Копирует","Сохраняет"],"answer":"Удаляет символ слева"},
-{"question":"Что такое логин?","options":["Имя пользователя","Пароль","Игра","Файл"],"answer":"Имя пользователя"},
-{"question":"Что такое браузер?","options":["Программа для интернета","Игра","Файл","Папка"],"answer":"Программа для интернета"},
-{"question":"Что такое YouTube?","options":["Видеохостинг","Браузер","Антивирус","Редактор"],"answer":"Видеохостинг"},
-{"question":"Что такое Google?","options":["Поисковая система","Файл","Монитор","Принтер"],"answer":"Поисковая система"},
-{"question":"Что такое вирус?","options":["Вредоносная программа","Игра","Файл","Браузер"],"answer":"Вредоносная программа"},
-{"question":"Что делает антивирус?","options":["Защищает компьютер","Удаляет Word","Создает файлы","Печатает"],"answer":"Защищает компьютер"},
-{"question":"Что такое электронная почта?","options":["Сервис сообщений","Игра","Файл","Документ"],"answer":"Сервис сообщений"},
-{"question":"Что такое архив?","options":["Сжатый файл","Браузер","Игра","Сайт"],"answer":"Сжатый файл"},
-{"question":"Что делает принтер?","options":["Печатает","Сканирует","Удаляет","Копирует"],"answer":"Печатает"},
-{"question":"Что такое облачное хранилище?","options":["Хранение файлов в интернете","Монитор","Процессор","Клавиатура"],"answer":"Хранение файлов в интернете"},
-{"question":"Что такое QR-код?","options":["Графический код","Документ","Монитор","Кнопка"],"answer":"Графический код"}
-
-],
-
-"7": [
-
-{"question":"Что такое алгоритм?","options":["Последовательность действий","Компьютер","Программа","Сайт"],"answer":"Последовательность действий"},
-{"question":"Что такое Python?","options":["Язык программирования","Браузер","Антивирус","Игра"],"answer":"Язык программирования"},
-{"question":"Что делает print()?","options":["Выводит текст","Удаляет файл","Создает папку","Закрывает программу"],"answer":"Выводит текст"},
-{"question":"Что делает input()?","options":["Получает ввод пользователя","Удаляет файл","Выключает ПК","Создает список"],"answer":"Получает ввод пользователя"},
-{"question":"Какой символ используется для комментариев?","options":["#","//","*","&"],"answer":"#"},
-{"question":"Как называется ошибка в программе?","options":["Баг","Файл","Монитор","Папка"],"answer":"Баг"},
-{"question":"Как называется цикл в Python?","options":["for","repeat","cycle","next"],"answer":"for"},
-{"question":"Какой тип данных хранит текст?","options":["str","int","bool","float"],"answer":"str"},
-{"question":"Какой тип данных хранит числа?","options":["int","str","bool","dict"],"answer":"int"},
-{"question":"Как называется логический тип данных?","options":["bool","float","str","list"],"answer":"bool"},
-{"question":"Что делает len()?","options":["Считает длину","Удаляет объект","Создает файл","Выключает программу"],"answer":"Считает длину"},
-{"question":"Что такое переменная?","options":["Хранилище данных","Монитор","Ошибка","Кнопка"],"answer":"Хранилище данных"},
-{"question":"Какой оператор используется для присваивания?","options":["=","+","==","-"],"answer":"="},
-{"question":"Что делает if?","options":["Проверяет условие","Создает цикл","Удаляет файл","Печатает текст"],"answer":"Проверяет условие"},
-{"question":"Что делает else?","options":["Выполняет код иначе","Создает файл","Удаляет объект","Закрывает программу"],"answer":"Выполняет код иначе"},
-{"question":"Что означает CPU?","options":["Центральный процессор","Монитор","Оперативная память","Видеокарта"],"answer":"Центральный процессор"},
-{"question":"Как называется среда разработки?","options":["IDE","PNG","JPG","HTML"],"answer":"IDE"},
-{"question":"Как называется список в Python?","options":["list","dict","bool","int"],"answer":"list"},
-{"question":"Что делает клавиша Delete?","options":["Удаляет объект","Создает папку","Копирует файл","Печатает текст"],"answer":"Удаляет объект"},
-{"question":"Как называется программа для просмотра сайтов?","options":["Браузер","Word","Paint","Excel"],"answer":"Браузер"}
-
-],
-
-"8": [
-
-{"question":"Что делает append()?","options":["Добавляет элемент","Удаляет элемент","Создает файл","Закрывает программу"],"answer":"Добавляет элемент"},
-{"question":"Что делает remove()?","options":["Удаляет элемент","Добавляет элемент","Создает список","Копирует объект"],"answer":"Удаляет элемент"},
-{"question":"Как называется словарь в Python?","options":["dict","list","tuple","bool"],"answer":"dict"},
-{"question":"Что делает range()?","options":["Создает диапазон чисел","Удаляет объект","Создает файл","Печатает текст"],"answer":"Создает диапазон чисел"},
-{"question":"Что такое цикл while?","options":["Цикл с условием","Ошибка","Список","Тип данных"],"answer":"Цикл с условием"},
-{"question":"Как называется функция для преобразования в число?","options":["int()","str()","len()","print()"],"answer":"int()"},
-{"question":"Что делает str()?","options":["Преобразует в текст","Удаляет текст","Создает список","Печатает"],"answer":"Преобразует в текст"},
-{"question":"Что делает break?","options":["Останавливает цикл","Создает цикл","Удаляет файл","Закрывает программу"],"answer":"Останавливает цикл"},
-{"question":"Что делает continue?","options":["Переходит к следующей итерации","Удаляет список","Создает файл","Печатает текст"],"answer":"Переходит к следующей итерации"},
-{"question":"Что такое вложенный цикл?","options":["Цикл внутри цикла","Ошибка","Список","Словарь"],"answer":"Цикл внутри цикла"},
-{"question":"Что делает sort()?","options":["Сортирует список","Удаляет список","Создает файл","Закрывает программу"],"answer":"Сортирует список"},
-{"question":"Как называется кортеж в Python?","options":["tuple","list","dict","bool"],"answer":"tuple"},
-{"question":"Что такое индекс списка?","options":["Номер элемента","Тип данных","Ошибка","Функция"],"answer":"Номер элемента"},
-{"question":"Что делает pop()?","options":["Удаляет элемент","Добавляет элемент","Сортирует список","Создает файл"],"answer":"Удаляет элемент"},
-{"question":"Что такое функция?","options":["Блок кода","Ошибка","Тип данных","Список"],"answer":"Блок кода"},
-{"question":"Что делает def?","options":["Создает функцию","Удаляет функцию","Создает список","Закрывает программу"],"answer":"Создает функцию"},
-{"question":"Что делает return?","options":["Возвращает значение","Удаляет объект","Создает файл","Печатает текст"],"answer":"Возвращает значение"},
-{"question":"Что такое параметр функции?","options":["Данные для функции","Ошибка","Список","Цикл"],"answer":"Данные для функции"},
-{"question":"Как называется библиотека в Python?","options":["Набор готового кода","Ошибка","Файл","Монитор"],"answer":"Набор готового кода"},
-{"question":"Что делает import?","options":["Подключает библиотеку","Удаляет файл","Создает цикл","Закрывает программу"],"answer":"Подключает библиотеку"}
-
-],
-
-"9": [
-
-{"question":"Что такое база данных?","options":["Хранилище информации","Программа","Монитор","Сайт"],"answer":"Хранилище информации"},
-{"question":"Что такое SQL?","options":["Язык запросов","Браузер","Антивирус","Игра"],"answer":"Язык запросов"},
-{"question":"Что делает SELECT в SQL?","options":["Выбирает данные","Удаляет данные","Создает таблицу","Закрывает БД"],"answer":"Выбирает данные"},
-{"question":"Что делает INSERT?","options":["Добавляет данные","Удаляет данные","Сортирует данные","Создает файл"],"answer":"Добавляет данные"},
-{"question":"Что делает DELETE?","options":["Удаляет данные","Добавляет данные","Создает таблицу","Печатает текст"],"answer":"Удаляет данные"},
-{"question":"Что такое HTML?","options":["Язык разметки","Язык программирования","Браузер","Сайт"],"answer":"Язык разметки"},
-{"question":"Какой тег создает заголовок?","options":["<h1>","<p>","<img>","<br>"],"answer":"<h1>"},
-{"question":"Какой тег создает ссылку?","options":["<a>","<p>","<div>","<table>"],"answer":"<a>"},
-{"question":"Что такое CSS?","options":["Язык стилей","База данных","Браузер","Функция"],"answer":"Язык стилей"},
-{"question":"Что делает color в CSS?","options":["Меняет цвет текста","Удаляет текст","Создает таблицу","Закрывает сайт"],"answer":"Меняет цвет текста"},
-{"question":"Что такое IP-адрес?","options":["Адрес устройства в сети","Пароль","Сайт","Программа"],"answer":"Адрес устройства в сети"},
-{"question":"Что такое домен?","options":["Имя сайта","Файл","Монитор","Список"],"answer":"Имя сайта"},
-{"question":"Что такое сервер?","options":["Компьютер для хранения данных","Монитор","Клавиатура","Принтер"],"answer":"Компьютер для хранения данных"},
-{"question":"Что такое браузер?","options":["Программа для сайтов","Антивирус","Игра","Файл"],"answer":"Программа для сайтов"},
-{"question":"Что такое кибербезопасность?","options":["Защита данных","Удаление файлов","Создание игр","Сортировка"],"answer":"Защита данных"},
-{"question":"Что такое вирус?","options":["Вредоносная программа","Тип данных","Функция","Список"],"answer":"Вредоносная программа"},
-{"question":"Что делает антивирус?","options":["Защищает компьютер","Удаляет Word","Создает сайт","Печатает"],"answer":"Защищает компьютер"},
-{"question":"Что такое облачное хранилище?","options":["Хранение файлов в интернете","Тип памяти","Монитор","Программа"],"answer":"Хранение файлов в интернете"},
-{"question":"Что такое API?","options":["Интерфейс взаимодействия","Браузер","Антивирус","Тип данных"],"answer":"Интерфейс взаимодействия"},
-{"question":"Что такое алгоритм?","options":["Последовательность действий","Компьютер","Файл","Монитор"],"answer":"Последовательность действий"}
-
-],
-
-"10": [
-
-{"question":"Что такое SQL?","options":["Язык запросов к БД","Язык стилей","Антивирус","Браузер"],"answer":"Язык запросов к БД"},
-{"question":"Что делает SELECT * FROM users?","options":["Выводит данные таблицы","Удаляет таблицу","Создает базу","Закрывает сервер"],"answer":"Выводит данные таблицы"},
-{"question":"Что такое HTML?","options":["Язык разметки","База данных","ОС","Тип данных"],"answer":"Язык разметки"},
-{"question":"Что такое CSS?","options":["Язык стилей","Язык запросов","Антивирус","Функция"],"answer":"Язык стилей"},
-{"question":"Что такое JavaScript?","options":["Язык программирования","Браузер","Сервер","Монитор"],"answer":"Язык программирования"},
-{"question":"Что такое IP-адрес?","options":["Адрес устройства в сети","Пароль","Сайт","База данных"],"answer":"Адрес устройства в сети"},
-{"question":"Что такое локальная сеть?","options":["Сеть внутри здания","Интернет","Антивирус","Тип памяти"],"answer":"Сеть внутри здания"},
-{"question":"Что такое сервер?","options":["Компьютер для хранения данных","Монитор","Клавиатура","Колонки"],"answer":"Компьютер для хранения данных"},
-{"question":"Что такое домен?","options":["Имя сайта","Тип данных","Список","Функция"],"answer":"Имя сайта"},
-{"question":"Что такое хостинг?","options":["Размещение сайта","Удаление сайта","Создание вирусов","Монитор"],"answer":"Размещение сайта"},
-{"question":"Что такое кибербезопасность?","options":["Защита информации","Удаление данных","Создание игр","Сортировка"],"answer":"Защита информации"},
-{"question":"Что такое фишинг?","options":["Кража данных","Создание сайтов","Сортировка данных","Работа БД"],"answer":"Кража данных"},
-{"question":"Что такое VPN?","options":["Защищенное соединение","Антивирус","База данных","Тип файла"],"answer":"Защищенное соединение"},
-{"question":"Что такое API?","options":["Интерфейс взаимодействия","Тип памяти","Монитор","Список"],"answer":"Интерфейс взаимодействия"},
-{"question":"Что такое GitHub?","options":["Сервис хранения кода","Антивирус","Браузер","Текстовый редактор"],"answer":"Сервис хранения кода"},
-{"question":"Что делает git push?","options":["Отправляет код","Удаляет код","Создает сервер","Закрывает проект"],"answer":"Отправляет код"},
-{"question":"Что такое JSON?","options":["Формат хранения данных","Антивирус","Тип процессора","Браузер"],"answer":"Формат хранения данных"},
-{"question":"Что такое Telegram Bot API?","options":["Интерфейс для ботов","Браузер","Операционная система","Монитор"],"answer":"Интерфейс для ботов"},
-{"question":"Что такое алгоритм?","options":["Последовательность действий","Монитор","Принтер","Сайт"],"answer":"Последовательность действий"},
-{"question":"Что такое IDE?","options":["Среда разработки","База данных","Антивирус","Браузер"],"answer":"Среда разработки"}
-
-],
-
-"11": [
-
-{"question":"Что такое ООП?","options":["Объектно-ориентированное программирование","База данных","Антивирус","Браузер"],"answer":"Объектно-ориентированное программирование"},
-{"question":"Что такое класс в Python?","options":["Шаблон объекта","Тип ошибки","Список","Сервер"],"answer":"Шаблон объекта"},
-{"question":"Что такое объект?","options":["Экземпляр класса","Функция","Тип данных","Браузер"],"answer":"Экземпляр класса"},
-{"question":"Что делает __init__?","options":["Конструктор класса","Удаляет объект","Создает цикл","Закрывает программу"],"answer":"Конструктор класса"},
-{"question":"Что такое наследование?","options":["Получение свойств другого класса","Удаление класса","Создание БД","Тип памяти"],"answer":"Получение свойств другого класса"},
-{"question":"Что такое инкапсуляция?","options":["Сокрытие данных","Удаление файлов","Создание сайтов","Сортировка"],"answer":"Сокрытие данных"},
-{"question":"Что такое полиморфизм?","options":["Разные формы одного метода","Тип вируса","Список","Функция"],"answer":"Разные формы одного метода"},
-{"question":"Что такое API?","options":["Интерфейс взаимодействия","Антивирус","Тип памяти","Монитор"],"answer":"Интерфейс взаимодействия"},
-{"question":"Что такое JSON?","options":["Формат обмена данными","Браузер","Сайт","Операционная система"],"answer":"Формат обмена данными"},
-{"question":"Что такое SQL?","options":["Язык запросов к БД","Язык стилей","Антивирус","Функция"],"answer":"Язык запросов к БД"},
-{"question":"Что делает SELECT?","options":["Выбирает данные","Удаляет таблицу","Создает БД","Закрывает сервер"],"answer":"Выбирает данные"},
-{"question":"Что такое GitHub?","options":["Сервис хранения кода","Браузер","База данных","Монитор"],"answer":"Сервис хранения кода"},
-{"question":"Что делает git commit?","options":["Сохраняет изменения","Удаляет проект","Создает сервер","Закрывает Git"],"answer":"Сохраняет изменения"},
-{"question":"Что такое кибербезопасность?","options":["Защита информации","Создание игр","Удаление данных","Сортировка"],"answer":"Защита информации"},
-{"question":"Что такое фишинг?","options":["Кража данных","Создание сайтов","Тип алгоритма","Список"],"answer":"Кража данных"},
-{"question":"Что такое VPN?","options":["Защищенное соединение","Тип памяти","Браузер","Антивирус"],"answer":"Защищенное соединение"},
-{"question":"Что такое искусственный интеллект?","options":["Имитация мышления человека","Тип процессора","База данных","Список"],"answer":"Имитация мышления человека"},
-{"question":"Что такое нейросеть?","options":["Модель машинного обучения","Антивирус","Браузер","Монитор"],"answer":"Модель машинного обучения"},
-{"question":"Что такое алгоритм?","options":["Последовательность действий","Сайт","Файл","Монитор"],"answer":"Последовательность действий"},
-{"question":"Что такое IDE?","options":["Среда разработки","База данных","Антивирус","Список"],"answer":"Среда разработки"}
-
-]
-    
-},
-
-"Математика": {
-
-"5": [
-
-{"question":"Чему равен НОД чисел 12 и 18?","options":["6","3","9","12"],"answer":"6"},
-{"question":"Чему равен НОК чисел 4 и 6?","options":["12","24","6","18"],"answer":"12"},
-{"question":"Сколько будет 3/5 + 1/5?","options":["4/5","4/10","3/10","1"],"answer":"4/5"},
-{"question":"Сколько будет 7/8 - 3/8?","options":["4/8","5/8","3/8","1/8"],"answer":"4/8"},
-{"question":"Чему равен периметр квадрата со стороной 7?","options":["28","14","49","21"],"answer":"28"},
-{"question":"Чему равна площадь прямоугольника 5×8?","options":["40","13","26","80"],"answer":"40"},
-{"question":"Сколько будет 125 × 4?","options":["500","400","450","520"],"answer":"500"},
-{"question":"Сколько будет 720 ÷ 9?","options":["80","70","90","60"],"answer":"80"},
-{"question":"Как называется результат умножения?","options":["Произведение","Сумма","Разность","Частное"],"answer":"Произведение"},
-{"question":"Как называется результат деления?","options":["Частное","Сумма","Разность","Произведение"],"answer":"Частное"},
-{"question":"Сколько градусов в прямом угле?","options":["90","45","180","360"],"answer":"90"},
-{"question":"Сколько будет 15²?","options":["225","125","150","215"],"answer":"225"},
-{"question":"Сколько сантиметров в 3 метрах?","options":["300","30","3000","3"],"answer":"300"},
-{"question":"Решите: x + 12 = 25","options":["13","12","14","15"],"answer":"13"},
-{"question":"Решите: 48 - x = 19","options":["29","19","39","21"],"answer":"29"},
-{"question":"Как называется фигура с тремя сторонами?","options":["Треугольник","Квадрат","Круг","Ромб"],"answer":"Треугольник"},
-{"question":"Сколько будет 0,5 + 0,5?","options":["1","0,5","1,5","0"],"answer":"1"},
-{"question":"Чему равен куб числа 4?","options":["64","16","32","48"],"answer":"64"},
-{"question":"Сколько минут в 2 часах?","options":["120","60","180","240"],"answer":"120"},
-{"question":"Сколько будет 84 ÷ 7?","options":["12","14","10","16"],"answer":"12"}
-
-],
-
-"6": [
-
-{"question":"Сколько будет -5 + 12?","options":["7","-7","17","5"],"answer":"7"},
-{"question":"Сколько будет 3/4 + 1/4?","options":["1","2","3/4","1/2"],"answer":"1"},
-{"question":"Сколько будет 2,5 + 1,7?","options":["4,2","3,2","4","5,2"],"answer":"4,2"},
-{"question":"Сколько будет 15% от 200?","options":["30","20","15","40"],"answer":"30"},
-{"question":"Решите: 3x = 27","options":["9","8","6","3"],"answer":"9"},
-{"question":"Решите: x - 14 = 8","options":["22","6","20","18"],"answer":"22"},
-{"question":"Сколько будет 1,2 × 10?","options":["12","1,2","120","0,12"],"answer":"12"},
-{"question":"Сколько будет 144 ÷ 12?","options":["12","14","10","16"],"answer":"12"},
-{"question":"Чему равна площадь квадрата со стороной 9?","options":["81","18","72","90"],"answer":"81"},
-{"question":"Сколько градусов в развернутом угле?","options":["180","90","360","45"],"answer":"180"},
-{"question":"Как называется число под чертой дроби?","options":["Знаменатель","Числитель","Делитель","Множитель"],"answer":"Знаменатель"},
-{"question":"Как называется число над чертой дроби?","options":["Числитель","Знаменатель","Делитель","Разность"],"answer":"Числитель"},
-{"question":"Сколько будет -8 × 6?","options":["-48","48","-14","14"],"answer":"-48"},
-{"question":"Сколько будет 7²?","options":["49","14","42","56"],"answer":"49"},
-{"question":"Сколько будет 5³?","options":["125","25","75","100"],"answer":"125"},
-{"question":"Как называется отношение двух чисел?","options":["Дробь","Сумма","Разность","Произведение"],"answer":"Дробь"},
-{"question":"Что показывает масштаб?","options":["Во сколько раз уменьшено","Скорость","Время","Площадь"],"answer":"Во сколько раз уменьшено"},
-{"question":"Сколько будет 0,25 × 4?","options":["1","0,5","2","4"],"answer":"1"},
-{"question":"Сколько будет 9/10 - 2/10?","options":["7/10","6/10","8/10","5/10"],"answer":"7/10"},
-{"question":"Как называется прямая, имеющая начало но не имеющая конца?","options":["Луч","Отрезок","Угол","Линия"],"answer":"Луч"}
-
-]
-
-}
-    
+    "Информатика": {
+        "5": [
+            {"question":"Что такое компьютер?","options":["Электронное устройство","Игрушка","Телефон","Телевизор"],"answer":"Электронное устройство"},
+            {"question":"Как называется устройство ввода текста?","options":["Клавиатура","Монитор","Колонки","Принтер"],"answer":"Клавиатура"},
+        ],
+        "6": [
+            {"question":"Что такое файл?","options":["Хранилище данных","Монитор","Принтер","Игра"],"answer":"Хранилище данных"},
+        ],
+        "7": [
+            {"question":"Что такое алгоритм?","options":["Последовательность действий","Компьютер","Программа","Сайт"],"answer":"Последовательность действий"},
+            {"question":"Что такое Python?","options":["Язык программирования","Браузер","Антивирус","Игра"],"answer":"Язык программирования"},
+            {"question":"Что делает print()?","options":["Выводит текст","Удаляет файл","Создает папку","Закрывает программу"],"answer":"Выводит текст"},
+            {"question":"Что делает input()?","options":["Получает ввод пользователя","Удаляет файл","Выключает ПК","Создает список"],"answer":"Получает ввод пользователя"},
+        ]
+    }
 }
 
+# ===== USER STATE =====
 user_data = {}
 
-def save_to_excel(data, score, subject, grade):
-
-    file_name = "results.xlsx"
-
-    if not os.path.exists(file_name):
-
-        wb = Workbook()
-        ws = wb.active
-
-        headers = [
-            "ФИО",
-            "Предмет",
-            "Класс",
-            "Дата и время"
-        ] + [f"В{i}" for i in range(1,11)] + ["Балл"]
-
-        ws.append(headers)
-
-        wb.save(file_name)
-
-    wb = load_workbook(file_name)
-    ws = wb.active
-
-    current_time = datetime.now().strftime("%d.%m.%Y %H:%M")
-
-    row = [
-        data[0][0],
-        subject,
-        grade,
-        current_time
-    ]
-
-    for ans in data:
-        row.append("✔" if ans[4] else "❌")
-
-    row.append(score)
-
-    ws.append(row)
-
-    wb.save(file_name)
-
+# ===== START =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    user_id = update.message.chat_id
-
-    user_data[user_id] = {
-        "name": None,
-        "subject": None,
-        "grade": None,
-        "score": 0,
-        "q": 0,
-        "answers": [],
-        "questions": [],
-        "results_mode": False
-    }
-
-    keyboard = [[s] for s in subjects.keys()]
-
+    keyboard = [["Информатика", "Математика"]]
     await update.message.reply_text(
-        "Добро пожаловать!\n\nВыберите предмет:",
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard,
-            resize_keyboard=True
-        )
+        "Выбери предмет:",
+        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     )
 
-async def send_results(update: Update,
-                       context: ContextTypes.DEFAULT_TYPE):
-
-    if update.message.chat_id != ADMIN_ID:
-
-        await update.message.reply_text(
-            "Нет доступа"
-        )
-
-        return
-
-    with open("results.xlsx", "rb") as file:
-
-        await update.message.reply_document(
-            document=InputFile(file)
-        )
-
-async def handle_message(update: Update,
-                         context: ContextTypes.DEFAULT_TYPE):
-
-    user_id = update.message.chat_id
+# ===== HANDLE =====
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
     text = update.message.text
 
-    if user_id not in user_data:
-        await start(update, context)
-        return
-
-    data = user_data[user_id]
-
-    if data["subject"] is None:
-
-        if text in subjects:
-
-            data["subject"] = text
-
-            keyboard = [[g] for g in subjects[text]]
-
-            await update.message.reply_text(
-                "Выберите класс:",
-                reply_markup=ReplyKeyboardMarkup(
-                    keyboard,
-                    resize_keyboard=True
-                )
-            )
-
-            return
-
-    if data["grade"] is None:
-
-        if text in subjects[data["subject"]]:
-
-            data["grade"] = text
-
-            await update.message.reply_text(
-                "Введите ваше ФИО:"
-            )
-
-            return
-
-    if data["name"] is None:
-
-        data["name"] = text
-
-        all_questions = question_bank[
-            data["subject"]
-        ][
-            data["grade"]
-        ]
-
-        data["questions"] = random.sample(
-            all_questions,
-            10
+    # выбор предмета
+    if text in subjects:
+        user_data[user_id] = {"subject": text}
+        keyboard = [[c] for c in subjects[text]]
+        await update.message.reply_text(
+            "Выбери класс:",
+            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         )
-
-        await send_question(update, context)
-
         return
 
-    q_index = data["q"]
+    # выбор класса
+    if user_id in user_data and "subject" in user_data[user_id] and "class" not in user_data[user_id]:
+        subject = user_data[user_id]["subject"]
+        if text in subjects[subject]:
+            user_data[user_id]["class"] = text
 
-    if q_index < len(data["questions"]):
+            questions = question_bank.get(subject, {}).get(text, [])
 
-        q = data["questions"][q_index]
+            if not questions:
+                await update.message.reply_text("Вопросов пока нет для этого класса")
+                return
 
-        correct = q["answer"]
+            q = random.choice(questions)
+            user_data[user_id]["current"] = q
 
-        is_correct = text == correct
+            keyboard = [[o] for o in q["options"]]
+            await update.message.reply_text(
+                q["question"],
+                reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+            )
+        return
 
-        if is_correct:
-            data["score"] += 1
+    # ответы
+    if user_id in user_data and "current" in user_data[user_id]:
+        q = user_data[user_id]["current"]
 
-        data["answers"].append([
-            data["name"],
-            q["question"],
-            text,
-            correct,
-            is_correct
-        ])
+        if text == q["answer"]:
+            await update.message.reply_text("✅ Правильно!")
+        else:
+            await update.message.reply_text(f"❌ Неправильно. Ответ: {q['answer']}")
 
-        data["q"] += 1
+        del user_data[user_id]["current"]
 
-        await send_question(update, context)
+        # следующий вопрос
+        subject = user_data[user_id]["subject"]
+        class_ = user_data[user_id]["class"]
 
-async def send_question(update: Update,
-                        context: ContextTypes.DEFAULT_TYPE):
+        questions = question_bank.get(subject, {}).get(class_, [])
+        q = random.choice(questions)
+        user_data[user_id]["current"] = q
 
-    user_id = update.message.chat_id
-
-    data = user_data[user_id]
-
-    q_index = data["q"]
-
-    if q_index < len(data["questions"]):
-
-        q = data["questions"][q_index]
-
-        keyboard = [[opt] for opt in q["options"]]
-
+        keyboard = [[o] for o in q["options"]]
         await update.message.reply_text(
             q["question"],
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard,
-                resize_keyboard=True
-            )
+            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         )
 
-    else:
+# ===== MAIN =====
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TOKEN).build()
 
-        await finish_test(update, context)
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-async def finish_test(update: Update,
-                      context: ContextTypes.DEFAULT_TYPE):
-
-    user_id = update.message.chat_id
-
-    data = user_data[user_id]
-
-    save_to_excel(
-        data["answers"],
-        data["score"],
-        data["subject"],
-        data["grade"]
-    )
-
-    percent = round(data["score"] / 10 * 100)
-
-    await update.message.reply_text(
-        f"Тест завершён!\n\n"
-        f"Предмет: {data['subject']}\n"
-        f"Класс: {data['grade']}\n"
-        f"Балл: {data['score']}/10\n"
-        f"Процент: {percent}%"
-    )
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("results", send_results))
-
-app.add_handler(
-    MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        handle_message
-    )
-)
-
-print("Бот запущен")
-
-app.run_polling()
+    print("Bot started")
+    app.run_polling()
